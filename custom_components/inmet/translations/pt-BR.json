@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Serviço já configurado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Código da cidade"
+                },
+                "title": "Preencha as informações."
+            }
+        }
+    }
+}
