@@ -27,6 +27,17 @@ class InMetAlert(ABC):
         alerts = self._alert["alerts"]
 
         return {alert["id"] for alert in alerts}
+    
+    def status(self) -> str:
+        """Get the higher severity"""
+        alerts = self._alert["alerts"]
+
+        if alerts:
+            severity = max(alerts, key=lambda alert: alert.get("id_severidade", 0))
+            status = severity.get("severidade", "Normal")
+        else:
+            status = "Normal"
+        return status
 
     def get(self, alert_id: str) -> dict | None:
         """Get a specific alert."""
@@ -83,6 +94,7 @@ class InMetFeedManager:
             count_removed: int = 0
 
             alert_ids = self._alerts.alert_ids()
+            status = self._alerts.status()
 
             total = len(alert_ids)
 
@@ -91,7 +103,7 @@ class InMetFeedManager:
             count_created = await self._update_feed_create_entries(alert_ids)
 
             await self._status_update(
-                total, count_created, count_updated, count_removed
+                status, total, count_created, count_updated, count_removed
             )
 
     def get(self, alert_id: str) -> dict | None:
@@ -183,12 +195,12 @@ class InMetFeedManager:
             await self._remove_async_callback(alert_id)
 
     async def _status_update(
-        self, total: int, count_created: int, count_updated: int, count_removed: int
+        self, status: str, total: int, count_created: int, count_updated: int, count_removed: int
     ):
         """Provide status update."""
         if self._status_async_callback:
             s = StatusUpdate(
-                "status",
+                status,
                 None,
                 None,
                 None,
