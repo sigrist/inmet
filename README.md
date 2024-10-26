@@ -1,11 +1,5 @@
 # INMET Custom Component
 
-[![GitHub Release][releases-shield]][releases]
-[![GitHub Activity][commits-shield]][commits]
-[![Downloads][download-latest-shield]](Downloads)
-[![License][license-shield]](LICENSE)
-[![hacs][hacsbadge]][hacs]
-
 Este custom component consulta o site do INMET (Instituto Nacional de Meteorologia) em busca de alertas meteorológicos para sua região e exibe essas informações no Home Assistant.
 
 ## Instalação
