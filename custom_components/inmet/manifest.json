@@ -5,7 +5,8 @@
     "@sigrist"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/home-assistant/example-custom-config/tree/master/custom_components/hello_world/",
+  "documentation": "https://github.com/sigrist/inmet",
+  "issue_tracker": "https://github.com/sigrist/inmet/issues",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": [],
