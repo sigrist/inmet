@@ -6,10 +6,24 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "City Code"
+                    "code": "City Code",
+                    "name": "City Name"
                 },
                 "title": "Fill in your filter details."
+            },
+            "select_city": {
+                "data": {
+                    "city_code": "Select a city"
+                },
+                "title": "Select a city from the list"
             }
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to the service.",
+            "city_not_found": "City not found."
+        },
+        "options": {
+            "back": "Return to enter another city name"
         }
     }
 }
