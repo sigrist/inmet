@@ -6,10 +6,24 @@
         "step": {
             "user": {
                 "data": {
-                    "code": "Código da cidade"
+                    "code": "Código da cidade",
+                    "name": "Nome da cidade"
                 },
-                "title": "Preencha as informações."
+                "title": "Preencha os detalhes."
+            },
+            "select_city": {
+                "data": {
+                    "city_code": "Selecione uma cidade"
+                },
+                "title": "Selecione uma cidade da lista"
             }
+        },
+        "error": {
+            "cannot_connect": "Não foi possível se conectar ao serviço InMet.",
+            "city_not_found": "Cidade não encontrada."
+        },
+        "options": {
+            "back": "Procurar por outra cidade"
         }
     }
 }
