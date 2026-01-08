@@ -113,10 +113,15 @@ class InMetFeedManager:
         return self._alerts.get(alert_id)
 
     async def _fetch_data(self) -> dict | None:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Connection': 'keep-alive',
+        }
         """Fetch city details from external server."""
         url = "https://apiprevmet3.inmet.gov.br/avisos/ativos"
         try:
-            async with self._websession.get(url) as response:
+            async with self._websession.get(url, headers=headers) as response:
                 if response.status != 200:
                     _LOGGER.error(
                         "Failed to fetch details for city code: %s", self._city_code
