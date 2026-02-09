@@ -132,9 +132,16 @@ class InmetFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _search_city(self, name: str) -> list | None:
         """Search the city using the inmet endpoint."""
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
+        }
+
         url = f"https://apiprevmet3.inmet.gov.br/autocomplete/{name}"
         try:
-            async with aiohttp.ClientSession() as session, session.get(url) as response:
+            async with aiohttp.ClientSession(headers=headers) as session, session.get(url) as response:
                 if response.status != 200:
                     _LOGGER.error("Failed to search city: %s", name)
                     return None
