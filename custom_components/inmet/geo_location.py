@@ -171,7 +171,7 @@ class InmetEvent(GeolocationEvent):
         self._alert_start_date = datetime.strptime(alert["inicio"], DATE_FORMAT)
         self._alert_end_date = datetime.strptime(alert["fim"], DATE_FORMAT)
         self._alert_sequence = alert["id_sequencia"]
-        self._alert_url = f"https://alertas2.inmet.gov.br/{self._alert_id}"
+        self._alert_url = f"https://avisos.inmet.gov.br/{self._alert_id}"
 
         self._attr_name = f"{self._alert_id} {self._description} {self._alert_severity}"
 
