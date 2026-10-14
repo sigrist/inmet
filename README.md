@@ -37,6 +37,17 @@ Passos para Criar uma Automação
 
 Com isso, você poderá, por exemplo, ser notificado sempre que houver um alerta meteorológico severo para sua região ou acionar outros dispositivos, como luzes, para chamar atenção sobre um alerta.
 
+### Atributos de alerta
+
+Cada entidade de alerta também disponibiliza os seguintes atributos para cards e automações:
+
+- `start_date` e `end_date`: horários com o fuso `America/Sao_Paulo`.
+- `updated_at`: data de emissão ou atualização informada pelo INMET.
+- `area`: estados afetados pelo alerta, com mesorregiões ou municípios como alternativa.
+- `bbox`: limite geográfico compacto como `[longitude mínima, latitude mínima, longitude máxima, latitude máxima]`.
+
+O polígono completo não é armazenado como atributo, para evitar registros grandes no banco de dados do Home Assistant.
+
 
 ## Dashboard
 
