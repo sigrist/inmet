@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
+import json
 import logging
 import math
+from numbers import Real
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
@@ -36,8 +39,12 @@ ATTR_ALERT_END_DATE = "end_date"
 ATTR_ALERT_SEQUENCE = "sequence"
 ATTR_ALERT_FUTURE = "future"
 ATTR_ALERT_URL = "url"
+ATTR_ALERT_UPDATED_AT = "updated_at"
+ATTR_ALERT_AREA = "area"
+ATTR_ALERT_BBOX = "bbox"
 
 DATE_FORMAT = "%Y-%m-%d %H:%M"
+INMET_TIME_ZONE = ZoneInfo("America/Sao_Paulo")
 
 
 ICONS = {
@@ -51,6 +58,78 @@ ICONS = {
 PARALLEL_UPDATES = 0
 
 SOURCE = "inmet"
+
+
+def _parse_alert_datetime(value: str) -> datetime:
+    """Return an INMET local timestamp with its timezone attached."""
+    return datetime.strptime(value, DATE_FORMAT).replace(tzinfo=INMET_TIME_ZONE)
+
+
+def _area_description(alert: dict) -> str | None:
+    """Return the most concise affected-area text published by INMET."""
+    for key in ("estados", "mesorregioes", "municipios"):
+        value = alert.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        if isinstance(value, list):
+            items = [
+                item.strip()
+                for item in value
+                if isinstance(item, str) and item.strip()
+            ]
+            if items:
+                return ", ".join(items)
+    return None
+
+
+def _bbox_from_polygon(value: Any) -> list[float] | None:
+    """Return a GeoJSON polygon bounding box, without storing the full geometry."""
+    if not isinstance(value, str):
+        return None
+
+    try:
+        geometry = json.loads(value)
+    except (TypeError, json.JSONDecodeError):
+        return None
+
+    if not isinstance(geometry, dict) or geometry.get("type") not in {
+        "Polygon",
+        "MultiPolygon",
+    }:
+        return None
+
+    coordinates = geometry.get("coordinates")
+    points: list[tuple[float, float]] = []
+
+    def collect_points(node: Any) -> None:
+        if (
+            isinstance(node, list)
+            and len(node) >= 2
+            and isinstance(node[0], Real)
+            and not isinstance(node[0], bool)
+            and isinstance(node[1], Real)
+            and not isinstance(node[1], bool)
+        ):
+            longitude = float(node[0])
+            latitude = float(node[1])
+            if (
+                math.isfinite(longitude)
+                and math.isfinite(latitude)
+                and -180 <= longitude <= 180
+                and -90 <= latitude <= 90
+            ):
+                points.append((longitude, latitude))
+            return
+        if isinstance(node, list):
+            for child in node:
+                collect_points(child)
+
+    collect_points(coordinates)
+    if not points:
+        return None
+
+    longitudes, latitudes = zip(*points)
+    return [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
 
 
 async def async_setup_entry(
@@ -110,6 +189,9 @@ class InmetEvent(GeolocationEvent):
         self._alert_end_date: datetime | None = None
         self._alert_sequence: int | None = None
         self._alert_url: str | None = None
+        self._alert_updated_at: str | None = None
+        self._alert_area: str | None = None
+        self._alert_bbox: list[float] | None = None
 
         self._version: int | None = None
         self._remove_signal_delete: Callable[[], None]
@@ -168,10 +250,13 @@ class InmetEvent(GeolocationEvent):
         self._alert_updated = alert["alterado"]
         self._alert_finished = alert["encerrado"]
         self._alert_future = alert["future"]
-        self._alert_start_date = datetime.strptime(alert["inicio"], DATE_FORMAT)
-        self._alert_end_date = datetime.strptime(alert["fim"], DATE_FORMAT)
+        self._alert_start_date = _parse_alert_datetime(alert["inicio"])
+        self._alert_end_date = _parse_alert_datetime(alert["fim"])
         self._alert_sequence = alert["id_sequencia"]
         self._alert_url = f"https://avisos.inmet.gov.br/{self._alert_id}"
+        self._alert_updated_at = alert.get("updated_at")
+        self._alert_area = _area_description(alert)
+        self._alert_bbox = _bbox_from_polygon(alert.get("poligono"))
 
         self._attr_name = f"{self._alert_id} {self._description} {self._alert_severity}"
 
@@ -207,6 +292,9 @@ class InmetEvent(GeolocationEvent):
                 (ATTR_ALERT_END_DATE, self._alert_end_date),
                 (ATTR_ALERT_SEQUENCE, self._alert_sequence),
                 (ATTR_ALERT_URL, self._alert_url),
+                (ATTR_ALERT_UPDATED_AT, self._alert_updated_at),
+                (ATTR_ALERT_AREA, self._alert_area),
+                (ATTR_ALERT_BBOX, self._alert_bbox),
             )
             if value or isinstance(value, bool)
         }
